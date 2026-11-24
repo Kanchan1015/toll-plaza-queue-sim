@@ -1,181 +1,316 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[Project Title]: Interactive Demo</title>
-<!--
-  STARTER TEMPLATE. The example simulation below is a Monte Carlo estimate of pi.
-  It is here only to show the required structure:
-    - at least three adjustable parameters
-    - Start / Pause / Reset
-    - a live visualisation
-    - at least one quantitative output, checked against a reference value
-    - an "About / How to use" panel
-  Replace the SIMULATION section and the controls with your own model.
--->
+<title>Toll Plaza Queue Simulator</title>
 <style>
-  :root { --ink:#1b2430; --muted:#5d6876; --line:#d8dee6; --accent:#1f6f8b; --bg:#f6f8fa; --ok:#1a7f37; --warn:#b35900; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
-  header { padding:16px 20px; background:#fff; border-bottom:1px solid var(--line); }
-  header h1 { margin:0; font-size:1.3rem; }
-  header p { margin:4px 0 0; color:var(--muted); font-size:.95rem; }
-  main { display:grid; grid-template-columns: 300px 1fr; gap:16px; padding:16px 20px; max-width:1200px; margin:0 auto; }
-  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
-  .panel { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px; }
-  label { display:block; font-size:.9rem; margin:12px 0 4px; }
-  label span { float:right; font-variant-numeric: tabular-nums; color:var(--muted); }
-  input[type=range] { width:100%; }
-  input[type=number] { width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; }
-  .buttons { display:flex; gap:8px; margin-top:16px; }
-  button { flex:1; padding:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; font-size:.95rem; cursor:pointer; }
-  button.secondary { background:#fff; color:var(--accent); }
-  canvas { width:100%; max-width:560px; aspect-ratio:1; display:block; margin:0 auto; background:#fff; border:1px solid var(--line); }
-  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-top:14px; }
-  .stat { border:1px solid var(--line); border-radius:6px; padding:10px; }
-  .stat .k { font-size:.8rem; color:var(--muted); }
-  .stat .v { font-size:1.2rem; font-variant-numeric: tabular-nums; }
-  .check.ok { color:var(--ok); } .check.warn { color:var(--warn); }
-  details { margin-top:16px; }
-  summary { cursor:pointer; font-weight:600; }
-  details p, details li { font-size:.92rem; line-height:1.45; }
+  :root{--bg:#f4f6f8;--card:#fff;--ink:#1d2733;--mute:#5d6b7a;--line:#d9e0e7;--accent:#1f6feb;--ok:#1a7f37;--bad:#c62828;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+  header{padding:18px 20px 6px;max-width:1040px;margin:0 auto}
+  h1{margin:0;font-size:1.5rem}
+  header p{margin:4px 0 0;color:var(--mute)}
+  main{max-width:1040px;margin:0 auto;padding:10px 20px 40px;display:grid;gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 22px}
+  .ctl label{display:flex;justify-content:space-between;font-weight:600;font-size:.92rem}
+  .ctl output{font-variant-numeric:tabular-nums;color:var(--accent)}
+  .ctl input[type=range]{width:100%}
+  .ctl small{color:var(--mute)}
+  .buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  button{font:inherit;padding:7px 14px;border-radius:7px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button:disabled{opacity:.5;cursor:default}
+  button:focus-visible,input:focus-visible{outline:3px solid #9ec5ff}
+  .banner{display:none;margin-top:10px;padding:8px 12px;border-radius:7px;background:#fdecea;color:var(--bad);font-weight:600}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .stat{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums}
+  .stat span{font-size:.78rem;color:var(--mute)}
+  canvas{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:#fff}
+  .legend{font-size:.82rem;color:var(--mute);margin-top:6px}
+  table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+  td,th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}
+  .pass{color:var(--ok);font-weight:700}.fail{color:var(--bad);font-weight:700}
+  h2{margin:0 0 8px;font-size:1.05rem}
+  p.note{margin:6px 0 0;color:var(--mute);font-size:.88rem}
 </style>
 </head>
 <body>
 <header>
-  <h1>[Project Title]</h1>
-  <p>[One-sentence description of what the simulation shows.]</p>
+  <h1>Toll Plaza Queue Simulator</h1>
+  <p>Cars arrive at random, each open booth serves one car at a time, and everyone waits in a single line. How many booths keep the average wait under 2 minutes?</p>
 </header>
-
 <main>
-  <section class="panel" aria-label="Controls">
-    <!-- REPLACE: your own parameters (at least three) -->
-    <label for="nTotal">Total samples <span id="nTotalVal"></span></label>
-    <input id="nTotal" type="range" min="1000" max="200000" step="1000" value="50000">
 
-    <label for="speed">Samples per frame (speed) <span id="speedVal"></span></label>
-    <input id="speed" type="range" min="10" max="5000" step="10" value="200">
+<section class="card" aria-label="Controls">
+  <div class="controls">
+    <div class="ctl"><label for="lam">Arrival rate &lambda; <output id="lamO">6.0</output></label>
+      <input id="lam" type="range" min="0.5" max="12" step="0.1" value="6"><small>cars per minute</small></div>
+    <div class="ctl"><label for="mu">Service rate &micro; per booth <output id="muO">2.5</output></label>
+      <input id="mu" type="range" min="0.5" max="6" step="0.1" value="2.5"><small>cars per minute, one booth</small></div>
+    <div class="ctl"><label for="c">Open booths c <output id="cO">3</output></label>
+      <input id="c" type="range" min="1" max="8" step="1" value="3"><small>changing this restarts the simulation</small></div>
+    <div class="ctl"><label for="spd">Animation speed <output id="spdO">0.5</output></label>
+      <input id="spd" type="range" min="0.1" max="10" step="0.1" value="0.5"><small>simulated minutes per real second</small></div>
+  </div>
+  <div class="buttons">
+    <button id="start" class="primary">Start</button>
+    <button id="pause" disabled>Pause</button>
+    <button id="reset">Reset</button>
+    <button id="preset">Load peak-hour example (&lambda;=6, &micro;=2.5, c=3)</button>
+  </div>
+  <div id="banner" class="banner" role="status"></div>
+</section>
 
-    <label for="seed">Random seed</label>
-    <input id="seed" type="number" value="42" min="1" step="1">
+<section class="card" aria-label="Simulation">
+  <canvas id="scene" width="960" height="420" aria-label="Animated toll plaza with queueing cars"></canvas>
+  <div class="legend">Car colour shows how long that car waited: green = no wait, red = 2 minutes or more. Booth light: green = idle, red = serving.</div>
+</section>
 
-    <div class="buttons">
-      <button id="startBtn">Start</button>
-      <button id="resetBtn" class="secondary">Reset</button>
-    </div>
+<section class="card" aria-label="Live results">
+  <div class="stats">
+    <div class="stat"><b id="sT">0.0</b><span>simulated time (min)</span></div>
+    <div class="stat"><b id="sQ">0</b><span>cars waiting now</span></div>
+    <div class="stat"><b id="sN">0</b><span>cars served (started service)</span></div>
+    <div class="stat"><b id="sW">&ndash;</b><span>average wait so far (min)</span></div>
+    <div class="stat"><b id="sMax">&ndash;</b><span>longest wait so far (min)</span></div>
+    <div class="stat"><b id="sRho">&ndash;</b><span>traffic intensity &rho; = &lambda;/(c&micro;)</span></div>
+    <div class="stat"><b id="sTh">&ndash;</b><span>exact long-run average wait (Erlang C, min)</span></div>
+    <div class="stat"><b id="sMin">&ndash;</b><span>fewest booths for wait &lt; 2 min (theory)</span></div>
+  </div>
+  <p class="note">The average so far starts from an empty plaza, so it begins too low and needs a few hundred cars to settle near the exact value. Use the check below for a proper comparison.</p>
+  <canvas id="chart" width="960" height="190" style="margin-top:10px" aria-label="Running average wait over time"></canvas>
+  <div class="legend">Blue: running average wait. Grey dashed: exact long-run value. Red dotted: 2-minute target.</div>
+</section>
 
-    <details>
-      <summary>About / How to use</summary>
-      <!-- REPLACE: explain your model, its parameters and how to read the outputs -->
-      <p>This example estimates &pi; by sampling random points in a unit square and counting the fraction that falls inside the quarter circle: &pi; &asymp; 4 &times; (inside / total).</p>
-      <ul>
-        <li>Set the parameters, then press <b>Start</b>. <b>Pause</b> stops the run; <b>Reset</b> clears it and applies new settings.</li>
-        <li>The estimate is shown with a 95% confidence interval. The error should shrink roughly as 1/&radic;N.</li>
-        <li>The check compares the estimate with the reference value; the notebook gives the same result for the default settings.</li>
-      </ul>
-    </details>
-  </section>
+<section class="card" aria-label="Check against theory and notebook">
+  <h2>Check this demo against theory</h2>
+  <p class="note" style="margin-top:0">Runs 30 independent simulations of 60,000 cars each with the settings above, using the same simulation code as the animation, and compares the result with the exact Erlang C formula. This is the same test the Colab notebook uses.</p>
+  <div class="buttons"><button id="verify" class="primary">Run check</button><span id="vProg" class="note"></span></div>
+  <div id="vOut" style="margin-top:8px"></div>
+</section>
 
-  <section class="panel" aria-label="Simulation">
-    <canvas id="view" width="560" height="560" aria-label="Live visualisation"></canvas>
-    <div class="stats">
-      <div class="stat"><div class="k">Samples so far</div><div class="v" id="outN">0</div></div>
-      <div class="stat"><div class="k">Estimate &plusmn; 95% CI</div><div class="v" id="outEst">–</div></div>
-      <div class="stat"><div class="k">Reference value</div><div class="v" id="outRef">3.14159</div></div>
-      <div class="stat"><div class="k">Check</div><div class="v check" id="outCheck">–</div></div>
-    </div>
-  </section>
+<section class="card" aria-label="About">
+  <h2>How it works</h2>
+  <p class="note" style="margin-top:0">This is a discrete-event simulation: instead of ticking every second, it jumps from one event (a car arrives, a car finishes at a booth) to the next. Gaps between arrivals and service times are random exponential numbers. If &rho; &ge; 1, cars arrive at least as fast as the booths can serve them and the line grows without bound; try 2 booths at &lambda;=6, &micro;=2.5 and watch.</p>
+</section>
+
 </main>
-
 <script>
-// ---------- seeded random number generator (reproducible runs) ----------
-function mulberry32(a) {
-  return function () {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a >>> 15, 1 | a);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
+// ==== CORE START (simulation engine, also tested outside the browser) ====
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// Exact M/M/c results (Erlang C). Returns null when rho >= 1 (no steady state).
+function erlangC(lam,mu,c){
+  const a=lam/mu, rho=a/c;
+  if(rho>=1) return null;
+  let term=1,sum=0;
+  for(let k=0;k<c;k++){sum+=term;term*=a/(k+1);}   // afterwards term = a^c / c!
+  const top=term/(1-rho), pWait=top/(sum+top);
+  return {rho:rho, pWait:pWait, wq:pWait/(c*mu-lam)};
 }
 
-// ---------- SIMULATION (REPLACE with your own model) ----------
-const REFERENCE = Math.PI;          // analytic / notebook reference value
-const sim = { rng: null, n: 0, inside: 0, nTotal: 0 };
-
-function initSim(params) {
-  sim.rng = mulberry32(params.seed);
-  sim.n = 0; sim.inside = 0; sim.nTotal = params.nTotal;
-}
-
-function stepSim(k, draw) {                 // advance the model by k samples
-  for (let i = 0; i < k && sim.n < sim.nTotal; i++) {
-    const x = sim.rng(), y = sim.rng();
-    const hit = x * x + y * y <= 1;
-    sim.n++; if (hit) sim.inside++;
-    draw(x, y, hit);
+class Sim{
+  constructor(lam,mu,c,seed){
+    this.lam=lam;this.mu=mu;this.c=c;this.rng=mulberry32(seed);
+    this.t=0;this.queue=[];this.fin=new Array(c).fill(Infinity);this.car=new Array(c).fill(null);
+    this.nextId=0;this.started=0;this.departed=0;this.sumW=0;this.maxW=0;
+    this.warm=0;this.limit=Infinity;this.nW=0;this.sumWw=0;this.hooks={};
+    this.nextArr=this.exp(lam);
+  }
+  exp(rate){return -Math.log(1-this.rng())/rate;}
+  setLam(l){this.lam=l;this.nextArr=this.t+this.exp(l);}                    // memoryless: safe to resample
+  setMu(m){this.mu=m;for(let i=0;i<this.c;i++) if(this.car[i]) this.fin[i]=this.t+this.exp(m);}
+  begin(car,i,t){
+    car.start=t;car.wait=t-car.arrive;car.booth=i;this.car[i]=car;this.fin[i]=t+this.exp(this.mu);
+    this.started++;this.sumW+=car.wait;if(car.wait>this.maxW)this.maxW=car.wait;
+    if(this.started>this.warm&&this.started<=this.limit){this.nW++;this.sumWw+=car.wait;}
+    if(this.hooks.start)this.hooks.start(car);
+  }
+  advance(T){
+    for(;;){
+      let ti=Infinity,bi=-1;
+      for(let i=0;i<this.c;i++) if(this.fin[i]<ti){ti=this.fin[i];bi=i;}
+      const ta=this.nextArr,t=Math.min(ti,ta);
+      if(t>T)break;
+      this.t=t;
+      if(ti<=ta){                                   // DEPARTURE (wins ties)
+        const car=this.car[bi];this.car[bi]=null;this.fin[bi]=Infinity;this.departed++;
+        if(this.hooks.depart)this.hooks.depart(car);
+        if(this.queue.length)this.begin(this.queue.shift(),bi,t);
+      }else{                                        // ARRIVAL
+        const car={id:this.nextId++,arrive:t,start:null,wait:null,booth:-1};
+        this.nextArr=t+this.exp(this.lam);
+        if(this.hooks.arrive)this.hooks.arrive(car);
+        const fi=this.car.indexOf(null);
+        if(fi>=0)this.begin(car,fi,t);else this.queue.push(car);
+      }
+    }
+    this.t=T;
   }
 }
 
-function estimate() {                       // quantitative output with uncertainty
-  if (sim.n === 0) return null;
-  const p = sim.inside / sim.n;
-  const est = 4 * p;
-  const se = 4 * Math.sqrt(p * (1 - p) / sim.n);
-  return { est, ci: 1.96 * se };
+// One replication: mean wait of cars (first 10% discarded), like the notebook
+function runReplication(lam,mu,c,n,seed){
+  const s=new Sim(lam,mu,c,seed);s.warm=Math.floor(0.1*n);s.limit=n;
+  while(s.started<n)s.advance(s.t+20);
+  return s.sumWw/s.nW;
 }
+function minBooths(lam,mu,target){
+  for(let c=1;c<=40;c++){const e=erlangC(lam,mu,c);if(e&&e.wq<target)return c;}
+  return null;
+}
+// ==== CORE END ====
 
-// ---------- UI wiring (keep the pattern, adapt the details) ----------
-const $ = (id) => document.getElementById(id);
-const ctx = $("view").getContext("2d");
-let running = false, frame = null;
+(function(){
+if(typeof document==='undefined')return;
+const $=id=>document.getElementById(id);
+const W=960,H=420,BOOTH_X=610,CAR_L=30,CAR_H=15,TARGET=2;
+const scene=$('scene').getContext('2d'),chart=$('chart').getContext('2d');
+let sim,cars,running=false,last=0,series,lastSample;
 
-function params() {
-  return { nTotal: +$("nTotal").value, speed: +$("speed").value, seed: Math.max(1, Math.floor(+$("seed").value) || 1) };
-}
-function showParams() {
-  $("nTotalVal").textContent = (+$("nTotal").value).toLocaleString();
-  $("speedVal").textContent = (+$("speed").value).toLocaleString();
-}
-function clearView() {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = "#1b2430"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, w, w, -Math.PI / 2, 0); ctx.stroke();
-}
-function drawPoint(x, y, hit) {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = hit ? "rgba(31,111,139,0.55)" : "rgba(179,89,0,0.55)";
-  ctx.fillRect(x * w, (1 - y) * w, 1.5, 1.5);
-}
-function showOutputs() {
-  $("outN").textContent = sim.n.toLocaleString();
-  const e = estimate();
-  if (!e) { $("outEst").textContent = "–"; $("outCheck").textContent = "–"; $("outCheck").className = "v check"; return; }
-  $("outEst").textContent = `${e.est.toFixed(4)} ± ${e.ci.toFixed(4)}`;
-  const ok = Math.abs(e.est - REFERENCE) <= e.ci;
-  $("outCheck").textContent = ok ? "Within CI" : "Outside CI";
-  $("outCheck").className = "v check " + (ok ? "ok" : "warn");
-}
-function loop() {
-  stepSim(params().speed, drawPoint);
-  showOutputs();
-  if (sim.n >= sim.nTotal) { stop(); $("startBtn").textContent = "Done"; $("startBtn").disabled = true; return; }
-  frame = requestAnimationFrame(loop);
-}
-function start() { running = true; $("startBtn").textContent = "Pause"; frame = requestAnimationFrame(loop); }
-function stop() { running = false; if (frame) cancelAnimationFrame(frame); $("startBtn").textContent = "Start"; }
-function reset() {
-  stop(); initSim(params()); clearView(); showOutputs();
-  $("startBtn").disabled = false; $("startBtn").textContent = "Start";
-}
+function params(){return {lam:+$('lam').value,mu:+$('mu').value,c:+$('c').value,spd:+$('spd').value};}
+function laneY(i,c){const lh=Math.min(64,(H-40)/c),y0=(H-c*lh)/2;return y0+lh*(i+0.5);}
 
-$("startBtn").addEventListener("click", () => (running ? stop() : start()));
-$("resetBtn").addEventListener("click", reset);
-["nTotal", "speed"].forEach((id) => $(id).addEventListener("input", showParams));
-["nTotal", "seed"].forEach((id) => $(id).addEventListener("change", reset));
-$("outRef").textContent = REFERENCE.toFixed(5);
-showParams(); reset();
+function reset(){
+  const p=params();
+  sim=new Sim(p.lam,p.mu,p.c,Math.floor(Math.random()*1e9));
+  cars=[];series=[];lastSample=-1;
+  sim.hooks.arrive=car=>{car.x=-40;car.y=laneY(0,sim.c);car.state='queue';cars.push(car);};
+  sim.hooks.start=car=>{car.state='serving';};
+  sim.hooks.depart=car=>{car.state='leaving';};
+  refreshTheory();update();draw();
+}
+function refreshTheory(){
+  const p=params(),e=erlangC(p.lam,p.mu,p.c),b=$('banner');
+  $('sRho').textContent=(p.lam/(p.c*p.mu)).toFixed(2);
+  $('sTh').textContent=e?e.wq.toFixed(3):'no steady state';
+  const m=minBooths(p.lam,p.mu,TARGET);$('sMin').textContent=m?m:'>40';
+  if(!e){b.style.display='block';b.textContent='ρ ≥ 1: cars arrive at least as fast as the booths can serve them, so the line grows without bound.';}
+  else b.style.display='none';
+}
+function colorFor(w){const f=Math.max(0,Math.min(1,w/TARGET));return 'hsl('+(120*(1-f))+',70%,45%)';}
+
+function draw(){
+  const g=scene,c=sim.c;
+  g.clearRect(0,0,W,H);
+  g.fillStyle='#e8ecf0';g.fillRect(0,0,W,H);
+  for(let i=0;i<c;i++){                                   // lanes
+    const y=laneY(i,c);
+    g.fillStyle='#d3d9df';g.fillRect(0,y-17,W,34);
+    g.strokeStyle='#fff';g.setLineDash([14,12]);g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();g.setLineDash([]);
+  }
+  for(let i=0;i<c;i++){                                   // booths
+    const y=laneY(i,c);
+    g.fillStyle='#37474f';g.fillRect(BOOTH_X,y-22,54,44);
+    g.fillStyle=sim.car[i]?'#e53935':'#43a047';g.beginPath();g.arc(BOOTH_X+47,y-14,4,0,6.3);g.fill();
+    g.fillStyle='#cfd8dc';g.font='11px system-ui';g.fillText('Booth '+(i+1),BOOTH_X+4,y+19);
+  }
+  const maxCols=Math.floor((BOOTH_X-70)/38),cap=maxCols*c;
+  for(const car of cars){
+    if(car.state==='queue'&&car.qi>=cap)continue;
+    if(car.x<-CAR_L)continue;
+    g.fillStyle=colorFor(car.state==='queue'?sim.t-car.arrive:car.wait);
+    g.beginPath();g.roundRect(car.x-CAR_L/2,car.y-CAR_H/2,CAR_L,CAR_H,4);g.fill();
+    g.fillStyle='rgba(255,255,255,.55)';g.fillRect(car.x+3,car.y-CAR_H/2+3,7,CAR_H-6);
+  }
+  if(sim.queue.length>cap){g.fillStyle='#b71c1c';g.font='bold 13px system-ui';g.fillText('+'+(sim.queue.length-cap)+' more waiting',12,20);}
+  g.fillStyle='#455a64';g.font='12px system-ui';g.fillText('entrance →',8,H-8);g.fillText('exit →',W-52,H-8);
+  drawChart();
+}
+function drawChart(){
+  const g=chart,w=960,h=190,L=46,R=10,T=10,B=26;
+  g.clearRect(0,0,w,h);g.font='11px system-ui';
+  const p=params(),e=erlangC(p.lam,p.mu,p.c);
+  const xmax=Math.max(20,sim.t),vals=series.map(s=>s.m);
+  let ymax=Math.max(TARGET*1.4,e?e.wq*1.4:0,...vals.slice(-400));ymax=Math.min(ymax,Math.max(TARGET*1.4,vals.length?Math.max(...vals):0));
+  const X=t=>L+(w-L-R)*t/xmax,Y=v=>T+(h-T-B)*(1-Math.min(v,ymax)/ymax);
+  g.strokeStyle='#d9e0e7';g.fillStyle='#5d6b7a';g.lineWidth=1;g.setLineDash([]);
+  g.strokeRect(L,T,w-L-R,h-T-B);
+  for(let k=0;k<=4;k++){const v=ymax*k/4;g.fillText(v.toFixed(1),6,Y(v)+4);}
+  g.fillText('simulated minutes',w/2-40,h-6);g.fillText(xmax.toFixed(0),w-R-22,h-B+14);g.fillText('0',L,h-B+14);
+  g.strokeStyle='#c62828';g.setLineDash([2,4]);g.beginPath();g.moveTo(L,Y(TARGET));g.lineTo(w-R,Y(TARGET));g.stroke();
+  if(e){g.strokeStyle='#78909c';g.setLineDash([7,5]);g.beginPath();g.moveTo(L,Y(e.wq));g.lineTo(w-R,Y(e.wq));g.stroke();}
+  g.setLineDash([]);g.strokeStyle='#1f6feb';g.lineWidth=2;g.beginPath();
+  series.forEach((s,i)=>{const x=X(s.t),y=Y(s.m);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.lineWidth=1;
+}
+function layout(dt){
+  const c=sim.c,maxCols=Math.floor((BOOTH_X-70)/38);
+  sim.queue.forEach((car,k)=>{car.qi=k;const col=Math.floor(k/c),row=k%c;car.tx=BOOTH_X-34-Math.min(col,maxCols-1)*38;car.ty=laneY(row,c);});
+  const vmax=300+140*params().spd;
+  for(let i=cars.length-1;i>=0;i--){
+    const car=cars[i];
+    if(car.state==='serving'){car.tx=BOOTH_X+27;car.ty=laneY(car.booth,c);}
+    else if(car.state==='leaving'){car.tx=W+80;car.ty=laneY(car.booth,c);}
+    const dx=car.tx-car.x,dy=car.ty-car.y,d=Math.hypot(dx,dy),s=Math.min(d,vmax*dt);
+    if(d>0.5){car.x+=dx/d*s;car.y+=dy/d*s;}
+    if(car.state==='leaving'&&car.x>W+40)cars.splice(i,1);
+  }
+}
+function update(){
+  $('sT').textContent=sim.t.toFixed(1);$('sQ').textContent=sim.queue.length;$('sN').textContent=sim.started;
+  $('sW').textContent=sim.started?(sim.sumW/sim.started).toFixed(3):'–';
+  $('sMax').textContent=sim.started?sim.maxW.toFixed(2):'–';
+}
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000||0);last=now;
+  if(running){
+    sim.advance(sim.t+dt*params().spd);
+    if(sim.started&&sim.t-lastSample>=0.25){lastSample=sim.t;series.push({t:sim.t,m:sim.sumW/sim.started});if(series.length>4000)series.splice(0,1000);}
+  }
+  layout(dt);update();draw();
+  requestAnimationFrame(frame);
+}
+function setRunning(r){running=r;$('start').disabled=r;$('pause').disabled=!r;}
+
+// ---- controls ----
+const fmt={lam:v=>(+v).toFixed(1),mu:v=>(+v).toFixed(1),c:v=>v,spd:v=>(+v).toFixed(1)};
+for(const id of ['lam','mu','c','spd']){
+  $(id).addEventListener('input',()=>{
+    $(id+'O').textContent=fmt[id]($(id).value);
+    const p=params();
+    if(id==='lam')sim.setLam(p.lam);
+    if(id==='mu')sim.setMu(p.mu);
+    if(id==='c'){setRunning(false);reset();return;}
+    refreshTheory();
+  });
+}
+$('start').onclick=()=>setRunning(true);
+$('pause').onclick=()=>setRunning(false);
+$('reset').onclick=()=>{setRunning(false);reset();};
+$('preset').onclick=()=>{
+  $('lam').value=6;$('mu').value=2.5;$('c').value=3;
+  for(const id of ['lam','mu','c'])$(id+'O').textContent=fmt[id]($(id).value);
+  setRunning(false);reset();
+};
+
+// ---- verification against Erlang C (and the notebook) ----
+const NOTEBOOK={3:0.4315,4:0.0718,5:0.0175};   // Erlang C values printed by the notebook for lambda=6, mu=2.5
+$('verify').onclick=async()=>{
+  const p=params(),e=erlangC(p.lam,p.mu,p.c),out=$('vOut'),btn=$('verify');
+  if(!e){out.innerHTML='<p class="fail">ρ ≥ 1: there is no steady state to check against. Increase booths or lower λ.</p>';return;}
+  btn.disabled=true;const R=30,N=60000,means=[];
+  for(let r=0;r<R;r++){
+    $('vProg').textContent='running '+(r+1)+' / '+R+' …';
+    await new Promise(res=>setTimeout(res,0));
+    means.push(runReplication(p.lam,p.mu,p.c,N,424242+r));
+  }
+  const mean=means.reduce((a,b)=>a+b,0)/R,sd=Math.sqrt(means.reduce((a,b)=>a+(b-mean)**2,0)/(R-1));
+  const half=2.0452*sd/Math.sqrt(R),rel=Math.abs(mean-e.wq)/e.wq,pass=rel<0.05;
+  let nb='';
+  if(p.lam===6&&p.mu===2.5&&NOTEBOOK[p.c]!==undefined)
+    nb='<tr><td>Notebook (Erlang C, λ=6, µ=2.5, c='+p.c+')</td><td>'+NOTEBOOK[p.c].toFixed(4)+' min</td></tr>';
+  out.innerHTML='<table><tr><th>Quantity</th><th>Value</th></tr>'+
+    '<tr><td>This demo, simulated mean wait (95% CI)</td><td>'+mean.toFixed(4)+' ± '+half.toFixed(4)+' min</td></tr>'+
+    '<tr><td>Exact Erlang C</td><td>'+e.wq.toFixed(4)+' min</td></tr>'+nb+
+    '<tr><td>Relative error (tolerance 5%)</td><td>'+(rel*100).toFixed(2)+'% &nbsp;<span class="'+(pass?'pass':'fail')+'">'+(pass?'PASS':'FAIL')+'</span></td></tr></table>';
+  $('vProg').textContent='';btn.disabled=false;
+};
+
+reset();requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>
